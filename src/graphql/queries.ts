@@ -8,6 +8,8 @@ export const getTodo = /* GraphQL */ `
       id
       name
       description
+      image
+      name2
       createdAt
       updatedAt
     }
@@ -24,6 +26,8 @@ export const listTodos = /* GraphQL */ `
         id
         name
         description
+        image
+        name2
         createdAt
         updatedAt
       }

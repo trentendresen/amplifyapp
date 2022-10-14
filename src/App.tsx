@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import API, { GraphQLResult, graphqlOperation } from "@aws-amplify/api";
+import { Storage } from "aws-amplify";
 import {
   Button,
   Flex,
@@ -7,14 +7,15 @@ import {
   Text,
   TextField,
   View,
+  Image,
   withAuthenticator,
 } from "@aws-amplify/ui-react";
 
-import { listTodos, getTodo } from "./graphql/queries";
+import { listTodos } from "./graphql/queries";
 import { createTodo, updateTodo, deleteTodo } from "./graphql/mutations";
 import { ListTodosQuery } from "./API";
 import * as APIt from "./API";
-import callGraphQL, { subscribeGraphQL } from "./Models/graphql-api";
+import callGraphQL from "./Models/graphql-api";
 import Todo, { mapListTodos } from "./Models/todo";
 
 // omitted Amplify.configure
@@ -38,21 +39,35 @@ function App({ signOut }: any) {
         console.error("Unable to edit", error);
       }
     };
-
-    // deleteData();
-    // createData();
-    // editData();
-    //getData();
   }, []);
 
   useEffect(() => {
     getTodos();
   }, []);
 
+  useEffect(() => {
+    //console.log({ todos });
+  }, [todos]);
+
   const getTodos = async () => {
     try {
       const todoData = await callGraphQL<ListTodosQuery>(listTodos);
+      console.log({ todoData });
       const todos = mapListTodos(todoData);
+      console.log({ todos });
+      await Promise.all(
+        todos.map(async (todo) => {
+          console.log(todo);
+          if (todo.image) {
+            if (todo.name) {
+              const url = await Storage.get(todo.name);
+              console.log(url);
+              todo.image = url;
+            }
+          }
+          return todo;
+        })
+      );
       setTodos(todos);
     } catch (error) {
       console.error("Error fetching todos", error);
@@ -63,14 +78,27 @@ function App({ signOut }: any) {
     event.preventDefault();
     try {
       const form = new FormData(event.target);
+      const image = form.get("image") as any;
+
       const data = {
         name: form.get("name"),
-        description: form.get("describe"),
+        description: form.get("description"),
+        image: image.name,
       };
+      if (!!data.image && data.name) {
+        console.log("hey");
+        console.log(image.name);
+        await Storage.put(data.name.toString(), image, {
+          customPrefix: { public: "" },
+          contentType: "image/png",
+        });
+      }
       const response = await callGraphQL<APIt.CreateTodoMutation>(createTodo, {
         input: {
           name: data.name?.toString(),
           description: data.description?.toString(),
+          image: data.image.name,
+          name2: "fuck hole",
         },
       } as APIt.CreateTodoMutationVariables);
       console.log(response);
@@ -121,6 +149,12 @@ function App({ signOut }: any) {
             variation="quiet"
             required
           />
+          <View
+            name="image"
+            as="input"
+            type="file"
+            style={{ alignSelf: "end" }}
+          />
           <Button type="submit" variation="primary">
             Create Note
           </Button>
@@ -138,7 +172,18 @@ function App({ signOut }: any) {
             <Text as="strong" fontWeight={700}>
               {todo.name}
             </Text>
+            <Text as="strong" fontWeight={700}>
+              {` ${todo.name2}`}
+            </Text>
+
             <Text as="span">{todo.description}</Text>
+            {todo.image && (
+              <Image
+                src={todo.image}
+                alt={`visual aid for ${todo.name}`}
+                style={{ width: 400 }}
+              />
+            )}
             <Button variation="link" onClick={() => deleteNote(todo)}>
               Delete note
             </Button>

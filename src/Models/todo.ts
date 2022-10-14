@@ -5,6 +5,8 @@ interface Todo {
   id?: string;
   name?: string;
   description?: string;
+  image?: string;
+  name2?: string;
 }
 
 function mapListTodosQuery(
@@ -17,6 +19,8 @@ function mapListTodosQuery(
           id: todo?.id,
           name: todo?.name,
           description: todo?.description,
+          image: todo?.image,
+          name2: todo?.name2,
         } as Todo)
     ) || []
   );
