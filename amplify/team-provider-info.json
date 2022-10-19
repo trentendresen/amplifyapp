@@ -19,7 +19,8 @@
         "amplifyapp": {}
       },
       "storage": {
-        "imagestorage": {}
+        "imagestorage": {},
+        "testresource": {}
       }
     }
   }

@@ -89,7 +89,6 @@ function App({ signOut }: any) {
         console.log("hey");
         console.log(image.name);
         await Storage.put(data.name.toString(), image, {
-          customPrefix: { public: "" },
           contentType: "image/png",
         });
       }
@@ -97,7 +96,7 @@ function App({ signOut }: any) {
         input: {
           name: data.name?.toString(),
           description: data.description?.toString(),
-          image: data.image.name,
+          image: image.name,
           name2: "fuck hole",
         },
       } as APIt.CreateTodoMutationVariables);
